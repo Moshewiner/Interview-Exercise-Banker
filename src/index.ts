@@ -3,6 +3,7 @@ import {router} from './components/banker.routes';
 import {config} from './config';
 import { Bank, BankAccount } from './components/banker.service';
 import { BankHandler } from './components/banker.handler';
+import { DiscoveryService } from './discovery-service.mock';
 
 const createApp = async () => {
     const app = express();
@@ -18,7 +19,7 @@ const createBankHandler = () => {
         new BankAccount("Moshe", 6),
         new BankAccount("John", 6)
     ]);
-    const bankHanler = new BankHandler(Bank);
+    const bankHanler = new BankHandler(Bank, new DiscoveryService([{name: "Banker-Service", urls: ["uighjeuhg"]}]));
     bankHanler.throttleSave(config.timeout);
 }
 
