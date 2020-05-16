@@ -1,10 +1,5 @@
-import * as redis from './../redis.mock';
-
-const redisClient = redis.createClient();
-
-
 export class BankAccount {
-    constructor(private _value: number, public readonly id: string) { }
+    constructor(public readonly id: string, private _value: number) { }
 
     public set value(amount: number) {
         if (amount > 0) {
@@ -18,27 +13,7 @@ export class BankAccount {
 }
 
 class Banker {
-    private isSomethingChanged = false;
     constructor(private accounts: BankAccount[] = []) {
-    }
-
-    public async throttleSave(timeout = 60*1000) {
-        while (true) {
-            if (this.isSomethingChanged) {
-                const timeoutPromise = new Promise((resolve, reject) => {
-                    setTimeout(() => { resolve(); }, timeout);
-                });
-
-                await Promise.all([timeoutPromise, this.saveAccountsValue(this.accounts)]);
-                this.isSomethingChanged = false;
-            }
-        }
-    }
-
-    private async saveAccountsValue(accounts: BankAccount[]): Promise<boolean> {
-        this.isSomethingChanged = true;
-        const accountsState = accounts.map(account => ({ key: account.id, value: account.value }));
-        return redisClient.mset(accountsState);
     }
 
     addAccount(bankAccount: BankAccount) {
@@ -49,8 +24,19 @@ class Banker {
         this.accounts = this.accounts.filter(account => account.id === accountId);
     }
 
-    getAccount(accountId: string) {
-        return this.accounts[accountId];
+    getAccount(accountId: string): BankAccount {
+        if (this.accounts[accountId]) {
+            return { ...this.accounts[accountId] };
+        }
+        return null;
+    }
+
+    getAllAccounts(): BankAccount[] {
+        return [...this.accounts];
+    }
+
+    setAllAccounts(bankAccounts: BankAccount[]) {
+        this.accounts = bankAccounts
     }
 }
 
