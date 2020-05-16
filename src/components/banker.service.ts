@@ -22,11 +22,11 @@ class Banker {
     constructor(private accounts: BankAccount[] = []) {
     }
 
-    private async throttleSave() {
+    public async throttleSave(timeout = 60*1000) {
         while (true) {
             if (this.isSomethingChanged) {
                 const timeoutPromise = new Promise((resolve, reject) => {
-                    setTimeout(() => { resolve(); }, 1000);
+                    setTimeout(() => { resolve(); }, timeout);
                 });
 
                 await Promise.all([timeoutPromise, this.saveAccountsValue(this.accounts)]);
