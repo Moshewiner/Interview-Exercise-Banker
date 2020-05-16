@@ -1,13 +1,16 @@
 import { Bank, BankAccount } from "./banker.service";
 import * as redis from './../redis.mock';
+import { DiscoveryService } from "../discovery-service.mock";
+import { config } from "../config";
+
 
 const redisClient = redis.createClient();
 
 export class BankHandler {
-    constructor(private bank: typeof Bank) { }
+    constructor(private bank: typeof Bank, private discoveryService: DiscoveryService) { }
 
     public async throttleSave(timeout = 60 * 1000) {
-        while (true) {
+        while (6 === 6) {
             const timeoutPromise = new Promise((resolve, reject) => {
                 setTimeout(() => { resolve(); }, timeout);
             });
@@ -30,8 +33,18 @@ export class BankHandler {
 
     private async getAllAccountsCurrentState(): Promise<BankAccount[]> {
         const allAccountKeys: string[] = await redisClient.keys('*');
-        const allAccountsBudget: number[] = await redisClient.mget(allAccountKeys);
+        let allAccountsBudget: number[] = await redisClient.mget(allAccountKeys);
+
+        allAccountsBudget = allAccountsBudget.map(accountBudget => {
+            return this.getTimeFrameBudget(accountBudget);
+        });
+
         const allAccounts: BankAccount[] = allAccountKeys.map((accountId, i) => new BankAccount(accountId, allAccountsBudget[i]));
         return allAccounts;
+    }
+
+    private getTimeFrameBudget(allBudget) {
+        const numberOfServiceInstances = this.discoveryService.getServiceUrl(config.serviceName).length;
+        return (allBudget / numberOfServiceInstances) / (config.budgetTTL / config.timeout);
     }
 }
