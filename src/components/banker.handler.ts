@@ -45,6 +45,6 @@ export class BankHandler {
 
     private getTimeFrameBudget(allBudget) {
         const numberOfServiceInstances = this.discoveryService.getServiceUrl(config.serviceName).length;
-        return (allBudget / numberOfServiceInstances) / (config.budgetTTL / config.timeout);
+        return (config.budgetTTL / config.timeout) / (allBudget / numberOfServiceInstances);
     }
 }
